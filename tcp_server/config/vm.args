@@ -1,0 +1,6 @@
+-name tcp_server@192.168.21.32
+
+-setcookie lynkit
+
++K true
++A30
