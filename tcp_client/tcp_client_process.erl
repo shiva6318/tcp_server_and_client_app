@@ -40,6 +40,7 @@
 
 -define( TICK_TIME, 5 ). 			%% Ticktime in Second
 -define( TICK_TIME_TRANSITION_PERIOD, 2 ).	%% Transition Period
+-define( SERVER_NODE_NAME, 'tcp_server@192.168.21.32'). %% Server node name
 
 
 %% ==================================================================
@@ -87,7 +88,7 @@ start_link(_anything) ->
 
 get_server_started_time() ->
 
-	case rpc:call('tcp_server@192.168.21.32',main_server_process,send_request_for_data,[get_server_start_time]) of
+	case rpc:call(?SERVER_NODE_NAME,main_server_process,send_request_for_data,[get_server_start_time]) of
 		{success, Time} ->
 			[{{Year,Month,Date},{Hr,Min,Second}}] = Time,
 			io:format("Server start date is ~p-~p-~p and Time is ~p:~p:~p ~n",[Date,Month,Year,Hr,Min,Second]);
@@ -110,7 +111,7 @@ get_server_started_time() ->
 
 get_connected_clients_with_server() ->
 
-	case rpc:call('tcp_server@192.168.21.32',main_server_process,send_request_for_data,[get_connected_clients]) of
+	case rpc:call(?SERVER_NODE_NAME,main_server_process,send_request_for_data,[get_connected_clients]) of
 		{success, Connected_node_list} ->
 			
 			io:format("Connected nodes with server are ~p ~n",[Connected_node_list]);
@@ -134,7 +135,7 @@ get_connected_clients_with_server() ->
 	
 get_disconnected_clients_with_server() ->
 
-	case rpc:call('tcp_server@192.168.21.32',main_server_process,send_request_for_data,[get_disconnected_clients]) of
+	case rpc:call(?SERVER_NODE_NAME,main_server_process,send_request_for_data,[get_disconnected_clients]) of
 		{success, Disconnected_node_list} ->
 			
 			io:format("DisConnected nodes with server are ~p ~n",[Disconnected_node_list]);
@@ -160,7 +161,7 @@ get_disconnected_clients_with_server() ->
 
 send_message_to_client(Message_for_server) when erlang:is_binary(Message_for_server)->
 		
-	case rpc:call('tcp_server@192.168.21.32',main_server_process,send_message_from_client,[Message_for_server]) of
+	case rpc:call(?SERVER_NODE_NAME,main_server_process,send_message_from_client,[Message_for_server]) of
 		{success, message_received} ->
 			io:format("message is received by server~n");
 		_anything ->
@@ -201,13 +202,14 @@ init( Node_name ) ->
 	
 	erlang:register(?MODULE, self()),
 	
-	net_adm:ping('tcp_server@192.168.21.32'),
+	net_adm:ping(?SERVER_NODE_NAME),
 	
 	io:format(" user can use * 'tcp_client_process' * atom to send message to client~n"),
 	
 	
 	receive 
 		stop ->
+			net_kernel:stop(), %% Turns a distributed node into a non-distributed node.
 			ok
 	end.
 
